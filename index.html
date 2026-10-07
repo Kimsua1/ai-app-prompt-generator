@@ -1,0 +1,459 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#1F3864">
+  <title>AI 앱 제작 프롬프트 생성기</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --navy: #1F3864;
+      --blue: #2f5fa8;
+      --blue-dark: #244a86;
+      --pale: #edf3fb;
+      --ink: #1f2937;
+      --muted: #657286;
+      --line: #d8e0eb;
+      --surface: #fff;
+      --soft: #f3f5f8;
+      --success: #16754b;
+      --shadow: 0 12px 34px rgba(31, 56, 100, .09);
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: #f5f7fb; color: var(--ink); font-family: "Malgun Gothic", "Apple SD Gothic Neo", system-ui, sans-serif; font-size: 16px; line-height: 1.65; }
+    button, input { font: inherit; }
+    button { cursor: pointer; }
+    .topbar { background: var(--navy); color: white; padding: 19px 24px; box-shadow: 0 3px 14px rgba(20, 39, 70, .18); }
+    .topbar-inner { max-width: 1000px; margin: auto; display: flex; align-items: center; gap: 12px; }
+    .brand-mark { display: grid; place-items: center; width: 38px; height: 38px; flex: 0 0 38px; background: rgba(255,255,255,.14); border-radius: 11px; font-size: 21px; }
+    .topbar h1 { margin: 0; font-size: clamp(19px, 3vw, 24px); line-height: 1.3; letter-spacing: -.04em; }
+    main { width: min(100% - 32px, 900px); margin: 36px auto 64px; }
+    .stepper { display: flex; align-items: center; justify-content: center; margin: 0 auto 27px; max-width: 520px; color: #8a95a6; }
+    .step-item { display: flex; align-items: center; gap: 8px; white-space: nowrap; font-size: 14px; font-weight: 650; }
+    .step-number { display: grid; place-items: center; width: 29px; height: 29px; border: 1px solid #c9d1dc; border-radius: 50%; background: white; font-size: 13px; }
+    .step-item.active { color: var(--navy); }
+    .step-item.active .step-number { border-color: var(--navy); background: var(--navy); color: white; }
+    .step-item.done .step-number { border-color: #7c9bcc; color: var(--navy); background: #e9f0fb; }
+    .step-line { height: 1px; width: clamp(28px, 9vw, 82px); margin: 0 12px; background: #d8dee7; }
+    .panel { background: var(--surface); border: 1px solid #e4e9f0; border-radius: 18px; box-shadow: var(--shadow); padding: clamp(22px, 5vw, 40px); }
+    .eyebrow { margin: 0 0 7px; color: var(--blue); font-size: 13px; font-weight: 750; letter-spacing: .06em; }
+    h2 { margin: 0; color: #172a49; font-size: clamp(24px, 4vw, 31px); line-height: 1.35; letter-spacing: -.045em; }
+    .lead { margin: 10px 0 26px; color: var(--muted); }
+    .app-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
+    .app-card { position: relative; min-height: 155px; padding: 19px 18px; text-align: left; background: white; border: 1.5px solid var(--line); border-radius: 14px; color: var(--ink); transition: .16s ease; }
+    .app-card:hover { border-color: #88a5d1; box-shadow: 0 6px 18px rgba(31,56,100,.08); transform: translateY(-2px); }
+    .app-card:focus-visible, button:focus-visible, input:focus-visible, summary:focus-visible { outline: 3px solid #91b5ee; outline-offset: 3px; }
+    .app-card.selected { border: 2px solid var(--blue); background: #f5f8fe; }
+    .card-icon { display: grid; place-items: center; width: 38px; height: 38px; margin-bottom: 12px; border-radius: 11px; background: var(--pale); font-size: 20px; }
+    .app-card strong { display: block; margin-bottom: 5px; color: #1b2d4b; font-size: 16px; line-height: 1.4; }
+    .app-card span:last-child { display: block; color: var(--muted); font-size: 13px; line-height: 1.5; }
+    .step-header { display: flex; align-items: flex-start; gap: 16px; margin-bottom: 22px; }
+    .back-button { flex: 0 0 auto; border: 1px solid var(--line); border-radius: 10px; padding: 9px 13px; background: white; color: var(--navy); font-weight: 700; }
+    .back-button:hover { background: #f3f6fb; }
+    .selected-app { display: inline-flex; align-items: center; gap: 8px; margin-top: 8px; color: var(--blue); font-size: 14px; font-weight: 750; }
+    .section-title { margin: 26px 0 12px; color: #203451; font-size: 17px; font-weight: 750; }
+    .feature-list { display: grid; gap: 9px; }
+    .feature-option { display: flex; align-items: flex-start; gap: 12px; padding: 13px 15px; border: 1px solid var(--line); border-radius: 11px; background: white; cursor: pointer; transition: .15s ease; }
+    .feature-option:hover { border-color: #9bb1d2; background: #fbfcff; }
+    .feature-option:has(input:checked) { border-color: #82a1d0; background: #f5f8fd; }
+    .feature-option input { width: 19px; height: 19px; margin: 2px 0 0; accent-color: var(--blue); flex: 0 0 auto; }
+    .feature-option span { line-height: 1.5; }
+    .custom-box { margin-top: 24px; padding: 19px; background: #f8faff; border: 1px solid #e2eaf6; border-radius: 14px; }
+    .custom-box .section-title { margin: 0 0 11px; }
+    .custom-box .section-title span { margin-right: 5px; }
+    .input-row { display: flex; gap: 9px; }
+    .input-row input, .input-row textarea { min-width: 0; flex: 1; padding: 11px 13px; border: 1px solid #cbd5e2; border-radius: 9px; background: white; color: var(--ink); }
+    .input-row input::placeholder, .input-row textarea::placeholder { color: #939eac; }
+    .input-row textarea { height: 48px; min-height: 48px; resize: none; overflow-y: auto; line-height: 24px; }
+    .input-row input:focus, .input-row textarea:focus { border-color: var(--blue); outline: 3px solid rgba(47,95,168,.12); }
+    .primary-button { border: 0; border-radius: 10px; padding: 11px 18px; background: var(--blue); color: white; font-weight: 750; transition: .15s ease; }
+    .primary-button:hover { background: var(--blue-dark); }
+    .secondary-button { border: 1px solid #cbd5e2; border-radius: 10px; padding: 10px 17px; background: white; color: #29466f; font-weight: 700; }
+    .secondary-button:hover { background: #f4f7fb; }
+    .input-meta { display: flex; justify-content: space-between; gap: 12px; margin-top: 6px; color: var(--muted); font-size: 12px; }
+    #char-count.near-limit { color: #b45309; font-weight: 700; }
+    .inline-notice { min-height: 20px; margin: 4px 0 0; color: #b45309; font-size: 12px; }
+    .chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+    .chip { display: inline-flex; align-items: center; gap: 7px; max-width: 100%; padding: 6px 8px 6px 12px; border: 1.5px dashed #6c8fc2; border-radius: 999px; background: #f7faff; color: #29466f; font-size: 13px; line-height: 1.4; }
+    .chip-label { overflow-wrap: anywhere; }
+    .chip-remove { display: grid; place-items: center; width: 22px; height: 22px; flex: 0 0 22px; padding: 0; border: 0; border-radius: 50%; background: transparent; color: #60738e; font-size: 15px; }
+    .chip-remove:hover { background: #e4ebf5; color: #172a49; }
+    .chip-empty { color: #8994a3; font-size: 13px; }
+    .step-actions { display: flex; justify-content: flex-end; margin-top: 26px; }
+    .step-actions .primary-button { min-width: 200px; padding: 13px 20px; }
+    .prompt-box, .example-box { position: relative; padding: 58px 20px 20px; border: 1px solid #e1e5eb; border-radius: 12px; background: #f1f3f6; }
+    .prompt-text { white-space: pre-wrap; overflow-wrap: anywhere; color: #273244; line-height: 1.85; }
+    .copy-button { position: absolute; top: 12px; right: 12px; border: 1px solid #cbd3de; border-radius: 8px; padding: 7px 11px; background: white; color: #34445c; font-size: 13px; font-weight: 700; }
+    .copy-button:hover { background: #f8fafc; }
+    .result-heading { display: flex; align-items: flex-end; justify-content: space-between; gap: 12px; margin-bottom: 15px; }
+    .result-heading .lead { margin: 8px 0 0; }
+    details { margin-top: 22px; border: 1px solid var(--line); border-radius: 12px; overflow: hidden; }
+    summary { padding: 15px 18px; color: #203451; background: #fbfcfe; cursor: pointer; font-weight: 750; list-style-position: inside; }
+    summary::marker { color: var(--blue); }
+    .example-content { padding: 0 16px 17px; }
+    .example-note { margin: 4px 2px 12px; color: var(--muted); font-size: 13px; }
+    .example-box { padding-top: 51px; }
+    .example-text { white-space: pre-wrap; overflow-wrap: anywhere; color: #354154; line-height: 1.75; }
+    .result-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 24px; }
+    .result-actions button { min-height: 48px; }
+    .toast { position: fixed; z-index: 10; left: 50%; bottom: 28px; transform: translate(-50%, 16px); padding: 10px 16px; border-radius: 999px; background: #183b2c; color: white; box-shadow: 0 8px 25px rgba(0,0,0,.18); opacity: 0; pointer-events: none; transition: .2s ease; font-size: 14px; font-weight: 700; }
+    .toast.show { transform: translate(-50%, 0); opacity: 1; }
+    .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
+    [hidden] { display: none !important; }
+    @media (max-width: 700px) {
+      main { width: min(100% - 24px, 560px); margin-top: 24px; }
+      .app-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+      .app-card { min-height: 154px; padding: 15px; }
+      .step-line { margin: 0 7px; width: clamp(12px, 6vw, 34px); }
+      .step-item { gap: 5px; font-size: 12px; }
+      .step-number { width: 25px; height: 25px; }
+      .panel { border-radius: 15px; }
+    }
+    @media (max-width: 440px) {
+      .topbar { padding: 15px 16px; }
+      .topbar-inner { gap: 9px; }
+      .brand-mark { width: 34px; height: 34px; flex-basis: 34px; }
+      .app-card { min-height: 165px; }
+      .app-card strong { font-size: 14px; }
+      .app-card span:last-child { font-size: 12px; }
+      .step-header { gap: 10px; }
+      .back-button { padding: 8px 10px; font-size: 13px; }
+      .input-row { align-items: stretch; }
+      .input-row .primary-button { padding: 10px 13px; }
+      .input-meta { font-size: 11px; }
+      .result-actions { grid-template-columns: 1fr; }
+      .result-heading { display: block; }
+    }
+    @media (prefers-reduced-motion: reduce) { *, *::before, *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; } }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="topbar-inner"><div class="brand-mark" aria-hidden="true">✦</div><h1>AI 앱 제작 프롬프트 생성기</h1></div>
+  </header>
+  <main>
+    <nav class="stepper" aria-label="진행 단계">
+      <div class="step-item active" data-step-indicator="1"><span class="step-number">1</span><span>앱 선택</span></div>
+      <span class="step-line" aria-hidden="true"></span>
+      <div class="step-item" data-step-indicator="2"><span class="step-number">2</span><span>기능 선택</span></div>
+      <span class="step-line" aria-hidden="true"></span>
+      <div class="step-item" data-step-indicator="3"><span class="step-number">3</span><span>프롬프트 확인</span></div>
+    </nav>
+
+    <section class="panel" id="step-1" aria-labelledby="step1-title">
+      <p class="eyebrow">STEP 1 · 앱 종류</p>
+      <h2 id="step1-title">어떤 앱을 만들고 싶으세요?</h2>
+      <p class="lead">만들고 싶은 앱을 선택하면 필요한 기능을 골라볼 수 있어요.</p>
+      <div class="app-grid" id="app-grid"></div>
+    </section>
+
+    <section class="panel" id="step-2" aria-labelledby="step2-title" hidden>
+      <div class="step-header">
+        <button type="button" class="back-button" id="back-to-apps">← 뒤로가기</button>
+        <div><p class="eyebrow">STEP 2 · 필요한 기능</p><h2 id="step2-title">원하는 기능을 선택하세요</h2><div class="selected-app" id="selected-app-label"></div></div>
+      </div>
+      <p class="lead">원하는 기능을 선택하세요 (여러 개 선택 가능)</p>
+      <div class="feature-list" id="feature-list"></div>
+      <section class="custom-box" aria-labelledby="custom-title">
+        <h3 class="section-title" id="custom-title"><span aria-hidden="true">➕</span>더 원하는 기능이 있나요? 직접 적어주세요</h3>
+        <form id="custom-form">
+          <label class="sr-only" for="custom-input">추가하고 싶은 기능</label>
+          <div class="input-row"><textarea id="custom-input" rows="1" maxlength="80" placeholder="예: 결과를 pdf로도 받고 싶어요" autocomplete="off"></textarea><button class="primary-button" type="submit">추가</button></div>
+          <div class="input-meta"><span>쉼표나 줄바꿈으로 나누어 여러 기능을 추가할 수 있어요.</span><span id="char-count" aria-live="polite">0/80자</span></div>
+          <p class="inline-notice" id="custom-notice" aria-live="polite"></p>
+        </form>
+        <div class="chips" id="custom-chips" aria-label="직접 추가한 기능"></div>
+      </section>
+      <div class="step-actions"><button type="button" class="primary-button" id="generate-button">프롬프트 생성하기 →</button></div>
+    </section>
+
+    <section class="panel" id="step-3" aria-labelledby="step3-title" hidden>
+      <div class="result-heading"><div><p class="eyebrow">STEP 3 · 완성된 프롬프트</p><h2 id="step3-title">프롬프트가 완성됐어요</h2><p class="lead">아래 내용을 복사해 ChatGPT에 붙여넣어 보세요.</p></div></div>
+      <div class="prompt-box"><button type="button" class="copy-button" id="copy-prompt">복사하기</button><div class="prompt-text" id="prompt-text" tabindex="0"></div></div>
+      <details id="example-details">
+        <summary>📋 교육용 예시 데이터 보기</summary>
+        <div class="example-content"><p class="example-note">이 데이터를 복사해서, 방금 만든 프롬프트로 생성된 앱의 입력창에 붙여넣어 보세요</p>
+          <div class="example-box"><button type="button" class="copy-button" id="copy-example">복사하기</button><div class="example-text" id="example-text" tabindex="0"></div></div>
+        </div>
+      </details>
+      <div class="result-actions"><button type="button" class="secondary-button" id="edit-features">다른 기능 다시 선택하기</button><button type="button" class="primary-button" id="reset-all">처음으로</button></div>
+    </section>
+  </main>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <script>
+    "use strict";
+    const apps = [
+      {
+        name: "반복 문서·기안문 생성기", description: "형식은 같고 수신처·날짜만 다른 문서를 한번에", icon: "📝",
+        features: ["여러 수신처를 한 번에 처리하고 싶어요", "문서 양식을 공문/안내문/협조요청 중에서 고르고 싶어요", "기한·날짜를 눈에 띄게 강조하고 싶어요", "전체 문서를 한 번에 복사하는 버튼이 필요해요", "개인정보 입력 금지 안내문구를 화면에 표시하고 싶어요"],
+        example: "문서 제목: 2026년 하반기 정보보안 교육 참석 협조 요청 / 용건: 소속 직원 전원이 11월 중 1회 이상 온라인 정보보안 교육을 이수하도록 안내하고, 이수 결과를 취합해 회신 요청 / 수신처: 기획예산과, 총무과, 인사과, 감사관실, 민원봉사과 / 담당자: 디지털안전팀 김도윤 주무관 / 기한: 2026년 11월 15일까지"
+      },
+      {
+        name: "명단 자동정리 앱", description: "신청자·교육생 명단을 중복제거·정렬·조편성까지", icon: "👥",
+        features: ["중복된 이름을 자동으로 찾아 제거하고 싶어요", "이름순 또는 부서순으로 정렬하고 싶어요", "인원을 몇 개 조로 자동 배정하고 싶어요", "조를 나눌 때 인원수를 균등하게 맞추고 싶어요", "결과를 엑셀에 붙여넣기 좋은 형태로 복사하고 싶어요"],
+        example: "김도윤 기획과\n이서연 총무과\n박지후 민원과\n최하은 감사관실\n정우진 기획과\n김도윤 기획과\n한소율 인사과\n윤지호 민원과\n오세빈 총무과\n임하준 기획과\n강나윤 감사관실\n신예준 인사과\n한소율 인사과\n조은우 민원과\n배시우 총무과"
+      },
+      {
+        name: "자료 취합 정리 앱", description: "여러 사람이 보낸 자료를 하나의 표로", icon: "📊",
+        features: ["자료를 보낸 사람(부서)별로 여러 건을 계속 추가할 수 있어야 해요", "텍스트 안의 숫자나 날짜를 자동으로 별도 열로 뽑아주면 좋겠어요", "부서별 소계(합계)를 보여주면 좋겠어요", "결과를 엑셀에 붙여넣기 좋은 형태로 복사하고 싶어요"],
+        example: "[기획과 이서연] 3분기 주민참여예산 사업 2건 완료, 집행액 4,200만원\n[복지과 박지후] 노인일자리 사업 참여자 85명 모집 완료, 9월까지 집행률 92%\n[환경과 정우진] 하천정화 활동 4회 실시, 참여 연인원 230명, 예산 소진율 78%"
+      },
+      {
+        name: "민원·문의 답변 초안 생성기", description: "민원 유형과 핵심내용만 입력하면 정중한 답변 초안을", icon: "💬",
+        features: ["민원 유형(불편신고/단순문의/건의 등)을 먼저 고르고 시작하고 싶어요", "처리 결과나 안내할 내용을 입력하면 정중한 문장으로 바꿔주면 좋겠어요", "서두-본문-마무리 인사가 구분된 형태로 완성해주면 좋겠어요", "같은 답변을 여러 민원인에게 보낼 때 이름만 바꿔 여러 건 만들고 싶어요", "완성된 답변을 한 번에 복사하는 버튼이 필요해요"],
+        example: "민원 유형: 불편신고 / 민원 내용: 아파트 앞 보행로의 가로등이 2주 전부터 꺼져 있어 야간 통행이 위험하니 조치 요청 / 처리 결과: 전구 노후로 인한 고장 확인, 11월 10일까지 교체 예정"
+      },
+      {
+        name: "회의록 작성 앱", description: "회의 메모를 안건·결정사항 중심으로 정리", icon: "🗒️",
+        features: ["안건·논의내용·결정사항·담당자 4가지로 구조화하고 싶어요", "발언자별로 내용을 구분해서 정리하고 싶어요", "다음 회의 일정이 언급되면 자동으로 뽑아주면 좋겠어요"],
+        example: "참석자: 기획과 이서연, 청년정책팀 박지후, 예산담당 최하은. 이서연이 청년 창업지원금 신청 접수가 예상보다 적다고 보고함. 박지후는 홍보가 부족했던 것 같다며 12월 초에 추가 홍보 기간을 갖자고 제안함. 최하은은 예산은 그대로 유지하되 신청 기한을 12월 20일까지 2주 연장하자고 함. 전원 동의. 다음 회의는 12월 5일 오전 10시로 정함."
+      },
+      {
+        name: "보도자료 생성 앱", description: "핵심 정보만 넣으면 보도자료 형식으로", icon: "📰",
+        features: ["제목과 부제를 자동으로 만들어주면 좋겠어요", "핵심 내용을 한 문단으로 요약해주면 좋겠어요", "배포처 목록을 가나다순으로 정리해주면 좋겠어요"],
+        example: "시(군)는 12월 1일부터 31일까지 관내 전통시장 5곳에서 '온누리상품권 환급 행사'를 진행한다. 1인당 최대 5만원 한도로 구매액의 10%를 환급해주며, 예산 소진 시 조기 종료될 수 있다. 참여 시장은 중앙시장, 역전시장, 자유시장, 풍물시장, 희망시장이다."
+      }
+    ];
+
+    const state = { appIndex: null, selectedFeatures: new Set(), customFeatures: [] };
+    const appGrid = document.getElementById("app-grid");
+    const featureList = document.getElementById("feature-list");
+    const customInput = document.getElementById("custom-input");
+    const charCount = document.getElementById("char-count");
+    const customNotice = document.getElementById("custom-notice");
+    const customChips = document.getElementById("custom-chips");
+    const toast = document.getElementById("toast");
+    let noticeTimer;
+    let toastTimer;
+
+    function renderAppCards() {
+      appGrid.replaceChildren();
+      apps.forEach((app, index) => {
+        const card = document.createElement("button");
+        card.type = "button";
+        card.className = "app-card";
+        card.setAttribute("aria-label", `${app.name}: ${app.description}`);
+        card.innerHTML = `<span class="card-icon" aria-hidden="true">${app.icon}</span><strong></strong><span></span>`;
+        card.querySelector("strong").textContent = app.name;
+        card.querySelector("span:last-child").textContent = app.description;
+        card.addEventListener("click", () => selectApp(index));
+        appGrid.append(card);
+      });
+    }
+
+    function selectApp(index) {
+      state.appIndex = index;
+      state.selectedFeatures.clear();
+      state.customFeatures = [];
+      renderFeatures();
+      renderChips();
+      showStep(2);
+    }
+
+    function renderFeatures() {
+      const app = apps[state.appIndex];
+      document.getElementById("selected-app-label").textContent = `${app.icon} ${app.name}`;
+      featureList.replaceChildren();
+      app.features.forEach((feature, index) => {
+        const label = document.createElement("label");
+        label.className = "feature-option";
+        const checkbox = document.createElement("input");
+        checkbox.type = "checkbox";
+        checkbox.value = String(index);
+        checkbox.checked = state.selectedFeatures.has(index);
+        checkbox.addEventListener("change", () => {
+          if (checkbox.checked) state.selectedFeatures.add(index);
+          else state.selectedFeatures.delete(index);
+        });
+        const text = document.createElement("span");
+        text.textContent = feature;
+        label.append(checkbox, text);
+        featureList.append(label);
+      });
+    }
+
+    function renderChips() {
+      customChips.replaceChildren();
+      if (state.customFeatures.length === 0) {
+        const empty = document.createElement("span");
+        empty.className = "chip-empty";
+        empty.textContent = "직접 추가한 기능이 여기에 표시됩니다.";
+        customChips.append(empty);
+        return;
+      }
+      state.customFeatures.forEach((feature, index) => {
+        const chip = document.createElement("span");
+        chip.className = "chip";
+        const text = document.createElement("span");
+        text.className = "chip-label";
+        text.textContent = feature;
+        const remove = document.createElement("button");
+        remove.type = "button";
+        remove.className = "chip-remove";
+        remove.textContent = "✕";
+        remove.setAttribute("aria-label", `직접 추가한 기능 삭제: ${feature}`);
+        remove.addEventListener("click", () => {
+          state.customFeatures.splice(index, 1);
+          renderChips();
+        });
+        chip.append(text, remove);
+        customChips.append(chip);
+      });
+    }
+
+    // 사용자 입력을 쉼표/줄바꿈으로 분리한 뒤 안내된 규칙대로 문장으로 정리합니다.
+    function cleanCustomSentences(rawText) {
+      return rawText.trim().split(/[,\n]+/).map((part) => {
+        let sentence = part.trim().replace(/[.!?。！？…]+$/u, "").trim();
+        if (!sentence || sentence.length < 5) return null;
+        if (!/(해줘|필요해|좋겠어|싶어요|해주세요)$/u.test(sentence)) {
+          sentence += " 기능도 추가해줘";
+        }
+        return sentence;
+      });
+    }
+
+    function showNotice(message) {
+      clearTimeout(noticeTimer);
+      customNotice.textContent = message;
+      noticeTimer = setTimeout(() => { customNotice.textContent = ""; }, 2000);
+    }
+
+    document.getElementById("custom-form").addEventListener("submit", (event) => {
+      event.preventDefault();
+      const raw = customInput.value;
+      if (!raw.trim()) {
+        showNotice("추가할 기능을 입력해주세요.");
+        customInput.focus();
+        return;
+      }
+      const cleaned = cleanCustomSentences(raw);
+      const valid = cleaned.filter(Boolean);
+      const rejected = cleaned.some((sentence) => sentence === null);
+      if (valid.length) {
+        state.customFeatures.push(...valid);
+        renderChips();
+      }
+      customInput.value = "";
+      charCount.textContent = "0/80자";
+      charCount.classList.remove("near-limit");
+      if (rejected) showNotice("조금 더 구체적으로 적어주세요");
+      else if (valid.length) showNotice("");
+      customInput.focus();
+    });
+
+    customInput.addEventListener("keydown", (event) => {
+      if (event.key === "Enter" && !event.shiftKey) {
+        event.preventDefault();
+        document.getElementById("custom-form").requestSubmit();
+      }
+    });
+
+    customInput.addEventListener("input", () => {
+      const count = [...customInput.value].length;
+      charCount.textContent = `${count}/80자`;
+      charCount.classList.toggle("near-limit", count >= 70);
+    });
+
+    function naturalizeFeature(sentence) {
+      let text = sentence.trim().replace(/[.!?。！？…]+$/u, "");
+      const endings = [
+        [/(하고 싶어요|싶어요)$/u, "할 수 있어야 해"],
+        [/(필요해요|필요해)$/u, "하는 기능이 필요해"],
+        [/(해주면 좋겠어요|좋겠어요)$/u, "할 수 있으면 좋겠어"],
+        [/(추가해줘|해주세요|해줘)$/u, "할 수 있는 기능이 필요해"],
+        [/(수 있어야 해요|있어야 해요)$/u, "할 수 있어야 해"]
+      ];
+      for (const [pattern, replacement] of endings) {
+        if (pattern.test(text)) return text.replace(pattern, replacement);
+      }
+      return `${text}할 수 있는 기능이 필요해`;
+    }
+
+    function makePrompt() {
+      const app = apps[state.appIndex];
+      const selected = [...state.selectedFeatures].sort((a, b) => a - b).map((index) => app.features[index]);
+      const requirements = selected.length
+        ? selected.map((feature) => `- ${naturalizeFeature(feature)}`).join("\n")
+        : "- 기본 목적을 쉽게 달성할 수 있도록 필요한 입력 영역과 결과 표시 기능을 제공해줘.";
+      const extras = state.customFeatures.length
+        ? `\n- 추가 요청사항: ${state.customFeatures.map((feature) => `그 외에 추가로, ${naturalizeFeature(feature)}`).join("; ")}`
+        : "";
+      return `너는 Google AI Studio의 'Build' 기능에 붙여넣을 앱 생성 프롬프트를 작성하는 전문 프롬프트 엔지니어야. 아래 요구사항을 반영해서, Google AI Studio가 한 번에 완성된 웹앱을 만들어낼 수 있도록 상세하고 구체적인 프롬프트를 작성해줘.\n\n[만들고 싶은 앱]\n- 이름: ${app.name}\n- 목적: ${app.description}\n- 필요한 기능:\n${requirements}${extras}\n\n위 요구사항을 반영해서, Google AI Studio가 이해하기 쉬운 자연어 프롬프트 형태로 한국어로 작성해줘. 화면 디자인 지시(입력창 위치, 버튼, 결과 표시 방식)도 구체적으로 포함해줘.`;
+    }
+
+    document.getElementById("generate-button").addEventListener("click", () => {
+      const app = apps[state.appIndex];
+      document.getElementById("prompt-text").textContent = makePrompt();
+      document.getElementById("example-text").textContent = app.example;
+      document.getElementById("example-details").open = false;
+      showStep(3);
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    });
+
+    function showStep(step) {
+      [1, 2, 3].forEach((number) => {
+        document.getElementById(`step-${number}`).hidden = number !== step;
+        const indicator = document.querySelector(`[data-step-indicator="${number}"]`);
+        indicator.classList.toggle("active", number === step);
+        indicator.classList.toggle("done", number < step);
+      });
+    }
+
+    document.getElementById("back-to-apps").addEventListener("click", () => showStep(1));
+    document.getElementById("edit-features").addEventListener("click", () => {
+      showStep(2);
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    });
+    document.getElementById("reset-all").addEventListener("click", () => {
+      state.appIndex = null;
+      state.selectedFeatures.clear();
+      state.customFeatures = [];
+      customInput.value = "";
+      charCount.textContent = "0/80자";
+      customNotice.textContent = "";
+      renderAppCards();
+      showStep(1);
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    });
+
+    function showToast(message) {
+      clearTimeout(toastTimer);
+      toast.textContent = message;
+      toast.classList.add("show");
+      toastTimer = setTimeout(() => toast.classList.remove("show"), 2000);
+    }
+
+    async function copyText(text) {
+      try {
+        if (navigator.clipboard && window.isSecureContext) {
+          await navigator.clipboard.writeText(text);
+        } else {
+          const area = document.createElement("textarea");
+          area.value = text;
+          area.style.position = "fixed";
+          area.style.opacity = "0";
+          document.body.append(area);
+          area.focus();
+          area.select();
+          const copied = document.execCommand("copy");
+          area.remove();
+          if (!copied) throw new Error("복사 실패");
+        }
+        showToast("복사되었습니다!");
+      } catch (_) {
+        showToast("복사할 수 없습니다. 텍스트를 선택해 복사해주세요.");
+      }
+    }
+    document.getElementById("copy-prompt").addEventListener("click", () => copyText(document.getElementById("prompt-text").textContent));
+    document.getElementById("copy-example").addEventListener("click", () => copyText(document.getElementById("example-text").textContent));
+
+    renderAppCards();
+    renderChips();
+  </script>
+</body>
+</html>
+
+
